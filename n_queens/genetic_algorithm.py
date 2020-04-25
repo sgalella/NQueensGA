@@ -6,7 +6,7 @@ class GeneticAlgorithm:
     """
     Genetic algorithm for TSP.
     """
-    def __init__(self, board_size, num_iterations, population_size, offspring_size, mutation_rate, random_seed):
+    def __init__(self, board_size=8, num_iterations=1000, population_size=100, offspring_size=20, mutation_rate=0.2):
         """
         Initializes the algorithm.
         """
@@ -15,7 +15,6 @@ class GeneticAlgorithm:
         self.population_size = population_size
         self.offspring_size = offspring_size
         self.mutation_rate = mutation_rate
-        np.random.seed(random_seed)
         assert self.offspring_size < self.population_size, "Population size has to be greater than the number of selected individuals"
 
     def __repr__(self):
@@ -103,7 +102,7 @@ class GeneticAlgorithm:
         Args:
             individual (np.array): Individual to be mutated.
         """
-        gene1, gene2 = np.random.randint((self.board_size, 2))
+        gene1, gene2 = np.random.choice(self.board_size, size=(2, 1), replace=False)
         individual[gene1], individual[gene2] = individual[gene2], individual[gene1]
 
     def generate_next_population(self, population):
