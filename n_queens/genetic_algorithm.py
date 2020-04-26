@@ -2,11 +2,20 @@ import numpy as np
 from tqdm import tqdm
 
 
+class MutationTypeError(Exception):
+    """
+    Selected mutation type does not exist.
+    """
+    def __init__(self):
+        super().__init__("Selected mutation type does not exist.")
+
+
 class GeneticAlgorithm:
     """
     Genetic algorithm for TSP.
     """
-    def __init__(self, board_size=8, num_iterations=1000, population_size=100, offspring_size=20, mutation_rate=0.2):
+    def __init__(self, board_size=8, num_iterations=1000, population_size=100, offspring_size=20, mutation_rate=0.2,
+                 mutation_type="swap"):
         """
         Initializes the algorithm.
         """
@@ -15,6 +24,7 @@ class GeneticAlgorithm:
         self.population_size = population_size
         self.offspring_size = offspring_size
         self.mutation_rate = mutation_rate
+        self.mutation_type = mutation_type
         assert self.offspring_size < self.population_size, "Population size has to be greater than the number of selected individuals"
 
     def __repr__(self):
@@ -26,9 +36,9 @@ class GeneticAlgorithm:
                 f"Num selected: {self.num_selected}\n"
                 f"Mutation rate: {self.mutation_rate}\n")
 
-    def random_population(self, num_individuals):
+    def random_initial_population(self):
         """
-        Generates random population of individuals
+        Generates random population of individuals.
 
         Args:
             num_individuals (int): Number of individuals to be created.
@@ -37,10 +47,10 @@ class GeneticAlgorithm:
             population (np.array): Population containg the different individuals.
         """
         # Initialize populationN
-        population = np.array([np.zeros([self.board_size], dtype=int) for _ in range(num_individuals)])
+        population = np.array([np.zeros([self.board_size], dtype=int) for _ in range(self.population_size)])
 
         # Apply different inhibition to each individual
-        for individual in range(num_individuals):
+        for individual in range(self.population_size):
             population[individual] = np.random.permutation(self.board_size)
 
         return population
@@ -65,7 +75,8 @@ class GeneticAlgorithm:
 
     def compute_fitness(self, population):
         """
-        Computes the fitness for each individual by calculating the distances of the cities.
+        Computes the fitness for each individual by calculating the number of checking queens.
+        The lesser the number of checking queens, the greater the fitness.
 
         Args:
             population (np.array): Population containg the different individuals.
@@ -88,24 +99,75 @@ class GeneticAlgorithm:
             parent2 (np.array): Second parent.
 
         Returns:
-            new_individual: Recombinated individual.
+            new_individual1, new_individual2 (tuple): Recombined individuals.
         """
         crossover_points = np.random.randint(self.board_size)
         new_individual1 = np.concatenate((parent1[:crossover_points], parent2[crossover_points:]))
         new_individual2 = np.concatenate((parent2[:crossover_points], parent1[crossover_points:]))
-        return [new_individual1, new_individual2]
+        return (new_individual1, new_individual2)
 
-    def mutation(self, individual):
+    def mutation_swap(self, individual):
         """
-        Mutates indidividual by changing the position of different cities.
+        Mutates indidividual using the swap method.
+
+        Args:
+            individual (np.array): Original individual.
+
+        Returns:
+            mutated_individual (np.array): Individual mutated.
+        """
+        mutated_individual = individual.copy()
+        gene1, gene2 = np.random.choice(self.board_size, size=(2, 1), replace=False).flatten()
+        mutated_individual[gene1], mutated_individual[gene2] = mutated_individual[gene2], mutated_individual[gene1]
+        return mutated_individual
+
+    def mutation_insert(self, individual):
+        """
+        Mutates indidividual using the insert method.
+
+        Args:
+            individual (np.array): Original individual.
+
+        Returns:
+            mutated_individual (np.array): Individual mutated.
+        """
+        gene1, gene2 = np.sort(np.random.choice(self.board_size, size=(2, 1), replace=False).flatten())
+        mutated_individual = np.concatenate((individual[:gene1 + 1], np.array((individual[gene2],)),
+                                             individual[gene1 + 1:gene2], individual[gene2 + 1:]))
+        return mutated_individual
+
+    def mutation_scramble(self, individual):
+        """
+        Mutates indidividual by using the scramble method.
+
+        Args:
+            individual (np.array): Original individual.
+
+        Returns:
+            mutated_individual (np.array): Individual mutated.
+        """
+        gene1, gene2 = np.sort(np.random.choice(self.board_size, size=(2, 1), replace=False).flatten())
+        chromosome = individual[gene1:gene2 + 1]
+        np.random.shuffle(chromosome)
+        mutated_individual = np.concatenate((individual[:gene1], chromosome, individual[gene2 + 1:]))
+        return mutated_individual
+
+    def mutation_inversion(self, individual):
+        """
+        Mutates indidividual by using the inversion method.
 
         Args:
             individual (np.array): Individual to be mutated.
-        """
-        gene1, gene2 = np.random.choice(self.board_size, size=(2, 1), replace=False)
-        individual[gene1], individual[gene2] = individual[gene2], individual[gene1]
 
-    def generate_next_population(self, population):
+        Returns:
+            mutated_individual (np.array): Individual mutated.
+        """
+        gene1, gene2 = np.sort(np.random.choice(self.board_size, size=(2, 1), replace=False).flatten())
+        chromosome = individual[gene1:gene2 + 1]
+        mutated_individual = np.concatenate((individual[:gene1], chromosome[::-1], individual[gene2 + 1:]))
+        return mutated_individual
+
+    def generate_next_population(self, population, mutation):
         """
         Generates the population for the next iteration.
 
@@ -113,7 +175,7 @@ class GeneticAlgorithm:
             population (np.array): Population containg the different individuals.
 
         Returns:
-                next_population, fitness_population (tuple): Returns tuple containing the next population and its fitness
+            next_population, fitness_population (tuple): Returns tuple containing the next population and its fitness
         """
         # Initialize new offspring
         offspring = np.array([np.zeros([self.board_size], dtype=int) for _ in range(self.offspring_size)])
@@ -128,10 +190,14 @@ class GeneticAlgorithm:
         # Add mutation
         for idx in range(len(population)):
             if np.random.random() < self.mutation_rate:
-                self.mutation(population[idx])
+                individual_mutated = mutation(population[idx])
+                population[idx] = individual_mutated
 
+        # Group populations
         temporal_population = np.vstack((population, offspring))
         fitness_population = self.compute_fitness(temporal_population)
+
+        # Select next generation with probability fitness / total_fitness
         probability_survival = fitness_population / (sum(fitness_population))
         idx_next_population = np.random.choice(range(len(temporal_population)), size=self.population_size, p=probability_survival.flatten())
 
@@ -141,14 +207,11 @@ class GeneticAlgorithm:
         """
         Runs the algorithm.
 
-        Args:
-            iter_info (int, optional): Frequency of information in screen. Defaults to 10.
-
         Returns:
             solutions, max_fitness, mean_fitness (tuple): Returns tuple containing the solutions the fitness mean and max along the iterations
         """
         # Initialize first population
-        population = self.random_population(self.population_size)
+        population = self.random_initial_population()
 
         # Initialize fitness variables
         mean_fitness = []
@@ -157,9 +220,21 @@ class GeneticAlgorithm:
         # Initialize best_fitness
         best_fitness_all = 0
 
+        # Select mutation
+        if self.mutation_type == "swap":
+            mutation = self.mutation_swap
+        elif self.mutation_type == "insert":
+            mutation = self.mutation_insert
+        elif self.mutation_type == "scramble":
+            mutation = self.mutation_scramble
+        elif self.mutation_type == "inversion":
+            mutation = self.mutation_inversion
+        else:
+            raise MutationTypeError
+
         # Iterate through generations
         for iteration in tqdm(range(self.num_iterations), ncols=75):
-            population, fitness = self.generate_next_population(population)
+            population, fitness = self.generate_next_population(population, mutation)
             best_fitness_iteration = np.max(fitness)
             mean_fitness_iteration = np.mean(fitness)
             max_fitness.append(best_fitness_iteration)
