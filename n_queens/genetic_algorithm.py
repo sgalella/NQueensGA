@@ -106,7 +106,8 @@ class GeneticAlgorithm:
         new_individual2 = np.concatenate((parent2[:crossover_points], parent1[crossover_points:]))
         return (new_individual1, new_individual2)
 
-    def mutation_swap(self, individual):
+    @staticmethod
+    def mutation_swap(individual, gene1=None, gene2=None):
         """
         Mutates indidividual using the swap method.
 
@@ -116,12 +117,14 @@ class GeneticAlgorithm:
         Returns:
             mutated_individual (np.array): Individual mutated.
         """
+        if gene1 is None or gene2 is None:
+            gene1, gene2 = np.random.choice(len(individual), size=(2, 1), replace=False).flatten()
         mutated_individual = individual.copy()
-        gene1, gene2 = np.random.choice(self.board_size, size=(2, 1), replace=False).flatten()
         mutated_individual[gene1], mutated_individual[gene2] = mutated_individual[gene2], mutated_individual[gene1]
         return mutated_individual
 
-    def mutation_insert(self, individual):
+    @staticmethod
+    def mutation_insert(individual, gene1=None, gene2=None):
         """
         Mutates indidividual using the insert method.
 
@@ -131,12 +134,14 @@ class GeneticAlgorithm:
         Returns:
             mutated_individual (np.array): Individual mutated.
         """
-        gene1, gene2 = np.sort(np.random.choice(self.board_size, size=(2, 1), replace=False).flatten())
+        if gene1 is None or gene2 is None:
+            gene1, gene2 = np.sort(np.random.choice(len(individual), size=(2, 1), replace=False).flatten())
         mutated_individual = np.concatenate((individual[:gene1 + 1], np.array((individual[gene2],)),
                                              individual[gene1 + 1:gene2], individual[gene2 + 1:]))
         return mutated_individual
 
-    def mutation_scramble(self, individual):
+    @staticmethod
+    def mutation_scramble(individual, gene1=None, gene2=None):
         """
         Mutates indidividual by using the scramble method.
 
@@ -146,13 +151,15 @@ class GeneticAlgorithm:
         Returns:
             mutated_individual (np.array): Individual mutated.
         """
-        gene1, gene2 = np.sort(np.random.choice(self.board_size, size=(2, 1), replace=False).flatten())
+        if gene1 is None or gene2 is None:
+            gene1, gene2 = np.sort(np.random.choice(len(individual), size=(2, 1), replace=False).flatten())
         chromosome = individual[gene1:gene2 + 1]
         np.random.shuffle(chromosome)
         mutated_individual = np.concatenate((individual[:gene1], chromosome, individual[gene2 + 1:]))
         return mutated_individual
 
-    def mutation_inversion(self, individual):
+    @staticmethod
+    def mutation_inversion(individual, gene1=None, gene2=None):
         """
         Mutates indidividual by using the inversion method.
 
@@ -162,7 +169,8 @@ class GeneticAlgorithm:
         Returns:
             mutated_individual (np.array): Individual mutated.
         """
-        gene1, gene2 = np.sort(np.random.choice(self.board_size, size=(2, 1), replace=False).flatten())
+        if gene1 is None or gene2 is None:
+            gene1, gene2 = np.sort(np.random.choice(len(individual), size=(2, 1), replace=False).flatten())
         chromosome = individual[gene1:gene2 + 1]
         mutated_individual = np.concatenate((individual[:gene1], chromosome[::-1], individual[gene2 + 1:]))
         return mutated_individual
