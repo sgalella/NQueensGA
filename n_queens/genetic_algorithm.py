@@ -10,12 +10,20 @@ class MutationTypeError(Exception):
         super().__init__("Selected mutation type does not exist.")
 
 
+class RecombinationTypeError(Exception):
+    """
+    Selected recombination type does not exist.
+    """
+    def __init__(self):
+        super().__init__("Selected recombination type does not exist.")
+
+
 class GeneticAlgorithm:
     """
     Genetic algorithm for TSP.
     """
     def __init__(self, board_size=8, num_iterations=1000, population_size=100, offspring_size=20, mutation_rate=0.2,
-                 mutation_type="swap"):
+                 mutation_type="swap", recombination_type="pmx"):
         """
         Initializes the algorithm.
         """
@@ -25,6 +33,7 @@ class GeneticAlgorithm:
         self.offspring_size = offspring_size
         self.mutation_rate = mutation_rate
         self.mutation_type = mutation_type
+        self.recombination_type = recombination_type
         assert self.offspring_size < self.population_size, "Population size has to be greater than the number of selected individuals"
 
     def __repr__(self):
@@ -90,9 +99,11 @@ class GeneticAlgorithm:
 
         return fitness_population.flatten()
 
-    def recombination(self, parent1, parent2):
+    @staticmethod
+    def recombination_pmx(individual1, individual2, gene1=None, gene2=None):
         """
-        Creates a new individual by recombinating two parents.
+        Creates a new individual by recombinating two parents using the
+        Partially Mapped Crossover (PMX) method.
 
         Args:
             parent1 (np.array): First parent.
@@ -101,10 +112,52 @@ class GeneticAlgorithm:
         Returns:
             new_individual1, new_individual2 (tuple): Recombined individuals.
         """
-        crossover_points = np.random.randint(self.board_size)
-        new_individual1 = np.concatenate((parent1[:crossover_points], parent2[crossover_points:]))
-        new_individual2 = np.concatenate((parent2[:crossover_points], parent1[crossover_points:]))
+        # Copy parents
+        parent1 = individual1.copy()
+        parent2 = individual2.copy()
+
+        # Initialize new individuals
+        new_individual1 = -np.ones(len(individual1), dtype=int)
+        new_individual2 = -np.ones(len(individual2), dtype=int)
+
+        # Perform the pmx recombination
+        # 1. Select two genes at random and copy segment to new individual 1
+        if gene1 is None or gene2 is None:
+            gene1, gene2 = GeneticAlgorithm.choose_random_genes(individual1)
+        new_individual1[gene1:gene2 + 1] = parent1[gene1:gene2 + 1]
+        new_individual2[gene1:gene2 + 1] = parent2[gene1:gene2 + 1]
+
+        # 2. Replace elements from the segment in the other parent
+        for current_gene in range(gene1, gene2 + 1):
+            if parent2[current_gene] not in new_individual1:
+                pos = np.where(parent2 == parent1[current_gene])[0][0]
+                if new_individual1[pos] == -1:
+                    new_individual1[pos] = parent2[current_gene]
+                else:
+                    while new_individual1[pos] != -1:
+                        pos = np.where(parent2 == parent1[pos])[0][0]
+                    new_individual1[pos] = parent2[current_gene]
+            if parent1[current_gene] not in new_individual2:
+                pos = np.where(parent2 == parent2[current_gene])[0][0]
+                if new_individual2[pos] == -1:
+                    new_individual2[pos] = parent1[current_gene]
+                else:
+                    while new_individual2[pos] != -1:
+                        pos = np.where(parent1 == parent2[pos])[0][0]
+                    new_individual2[pos] = parent1[current_gene]
+
+        # 3. Complete empty positions with the segment of the opposite parent from 1.
+        new_individual1[np.where(new_individual1 == -1)] = parent2[np.where(new_individual1 == -1)]
+        new_individual2[np.where(new_individual2 == -1)] = parent1[np.where(new_individual2 == -1)]
+
         return (new_individual1, new_individual2)
+
+    @staticmethod
+    def choose_random_genes(individual):
+        gene1, gene2 = np.sort(np.random.choice(len(individual), size=(2, 1), replace=False).flatten())
+        while gene2 - gene1 < 2:
+            gene1, gene2 = np.sort(np.random.choice(len(individual), size=(2, 1), replace=False).flatten())
+        return (gene1, gene2)
 
     @staticmethod
     def mutation_swap(individual, gene1=None, gene2=None):
@@ -175,7 +228,7 @@ class GeneticAlgorithm:
         mutated_individual = np.concatenate((individual[:gene1], chromosome[::-1], individual[gene2 + 1:]))
         return mutated_individual
 
-    def generate_next_population(self, population, mutation):
+    def generate_next_population(self, population, mutation, recombination):
         """
         Generates the population for the next iteration.
 
@@ -191,7 +244,7 @@ class GeneticAlgorithm:
         # Recombinate best individuals
         for individual in range(0, self.offspring_size, 2):
             idx_parent1, idx_parent2 = np.random.choice(self.population_size, size=2, replace=False)
-            new_individual1, new_individual2 = self.recombination(population[idx_parent1], population[idx_parent2])
+            new_individual1, new_individual2 = recombination(population[idx_parent1], population[idx_parent2])
             offspring[individual] = new_individual1
             offspring[individual + 1] = new_individual2
 
@@ -240,9 +293,15 @@ class GeneticAlgorithm:
         else:
             raise MutationTypeError
 
+        # Select recombination
+        if self.recombination_type == "pmx":
+            recombination = self.recombination_pmx
+        else:
+            raise RecombinationTypeError
+
         # Iterate through generations
         for iteration in tqdm(range(self.num_iterations), ncols=75):
-            population, fitness = self.generate_next_population(population, mutation)
+            population, fitness = self.generate_next_population(population, mutation, recombination)
             best_fitness_iteration = np.max(fitness)
             mean_fitness_iteration = np.mean(fitness)
             max_fitness.append(best_fitness_iteration)
