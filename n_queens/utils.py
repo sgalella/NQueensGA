@@ -2,7 +2,7 @@ import tkinter as tk
 import matplotlib.pyplot as plt
 
 
-def plot_results(solution, mean_fitness, max_fitness):
+def plot_results(solution, mean_fitness, max_fitness, diversity_genotype, diversity_phenotype):
     """
     Prints the solution board and the algorithm convergence.
 
@@ -37,8 +37,21 @@ def plot_results(solution, mean_fitness, max_fitness):
     plt.legend(("mean fitness", "max fitness"))
     plt.xlabel('iterations')
     plt.ylabel('fitness')
-    plt.title('Fitness convergence')
+    plt.title('Fitness through generations')
     plt.grid(alpha=0.3)
     plt.savefig('images/convergence.jpg')
     plt.show(block=False)
+
+    # Diversity bar plot
+    plt.figure()
+    plt.bar(range(len(diversity_phenotype)), diversity_genotype, color='lime', alpha=0.5)
+    plt.bar(range(len(diversity_phenotype)), diversity_phenotype, color='orange', alpha=0.5)
+    plt.legend(("genotype diversity", "phenotype diversity"))
+    plt.xlabel('iterations')
+    plt.ylabel('diversity')
+    plt.title('Diversity through generations')
+    plt.grid(alpha=0.3)
+    plt.savefig('images/diversity.jpg')
+    plt.show(block=False)
+
     root.mainloop()

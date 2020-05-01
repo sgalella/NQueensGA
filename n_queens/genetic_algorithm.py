@@ -367,6 +367,8 @@ class GeneticAlgorithm:
         # Initialize fitness variables
         mean_fitness = []
         max_fitness = []
+        diversity_genotype = []
+        diversity_phenotype = []
 
         # Initialize best_fitness
         best_fitness_all = 0
@@ -398,8 +400,12 @@ class GeneticAlgorithm:
             population, fitness = self.generate_next_population(population, mutation, recombination)
             best_fitness_iteration = np.max(fitness)
             mean_fitness_iteration = np.mean(fitness)
+            diversity_genotype_iteration = np.unique(population, axis=0).shape[0]
+            diversity_phenotype_iteration = np.unique(fitness).shape[0]
             max_fitness.append(best_fitness_iteration)
             mean_fitness.append(mean_fitness_iteration)
+            diversity_genotype.append(diversity_genotype_iteration)
+            diversity_phenotype.append(diversity_phenotype_iteration)
             if best_fitness_iteration > best_fitness_all:
                 solutions = []
                 for best_individual in population[np.where(fitness == best_fitness_iteration)]:
@@ -411,4 +417,4 @@ class GeneticAlgorithm:
                     if not any((best_individual == individual).all() for individual in solutions):
                         solutions.append(best_individual)
 
-        return (np.asarray(solutions), max_fitness, mean_fitness)
+        return (np.asarray(solutions), max_fitness, mean_fitness, diversity_genotype, diversity_phenotype)
