@@ -201,7 +201,6 @@ class GeneticAlgorithm:
 
         return (new_individual1, new_individual2)
 
-
     @staticmethod
     def choose_random_genes(individual):
         gene1, gene2 = np.sort(np.random.choice(len(individual), size=(2, 1), replace=False).flatten())
@@ -257,8 +256,10 @@ class GeneticAlgorithm:
         if gene1 is None or gene2 is None:
             gene1, gene2 = np.sort(np.random.choice(len(individual), size=(2, 1), replace=False).flatten())
         chromosome = individual[gene1:gene2 + 1]
-        np.random.shuffle(chromosome)
-        mutated_individual = np.concatenate((individual[:gene1], chromosome, individual[gene2 + 1:]))
+        chromosome_permuted = np.random.permutation(chromosome)
+        while np.array_equal(chromosome, chromosome_permuted):
+            chromosome_permuted = np.random.permutation(chromosome)
+        mutated_individual = np.concatenate((individual[:gene1], chromosome_permuted, individual[gene2 + 1:]))
         return mutated_individual
 
     @staticmethod
