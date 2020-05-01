@@ -121,7 +121,7 @@ class GeneticAlgorithm:
         new_individual2 = -np.ones(len(individual2), dtype=int)
 
         # Perform the pmx recombination
-        # 1. Select two genes at random and copy segment to new individual 1
+        # 1. Select two genes at random and copy segment to new individuals
         if gene1 is None or gene2 is None:
             gene1, gene2 = GeneticAlgorithm.choose_random_genes(individual1)
         new_individual1[gene1:gene2 + 1] = parent1[gene1:gene2 + 1]
@@ -151,6 +151,56 @@ class GeneticAlgorithm:
         new_individual2[np.where(new_individual2 == -1)] = parent1[np.where(new_individual2 == -1)]
 
         return (new_individual1, new_individual2)
+
+    @staticmethod
+    def recombination_order(individual1, individual2, gene1=None, gene2=None):
+        """
+        Creates a new individual by recombinating two parents using the
+        Order Crossover method.
+
+        Args:
+            parent1 (np.array): First parent.
+            parent2 (np.array): Second parent.
+
+        Returns:
+            new_individual1, new_individual2 (tuple): Recombined individuals.
+        """
+        # Copy parents
+        parent1 = individual1.copy()
+        parent2 = individual2.copy()
+
+        # Initialize new individuals
+        new_individual1 = -np.ones(len(individual1), dtype=int)
+        new_individual2 = -np.ones(len(individual2), dtype=int)
+
+        # Perform the order recombination
+        # 1. Select two genes at random and copy segment to new individuals
+        if gene1 is None or gene2 is None:
+            gene1, gene2 = GeneticAlgorithm.choose_random_genes(individual1)
+        new_individual1[gene1:gene2 + 1] = parent1[gene1:gene2 + 1]
+        new_individual2[gene1:gene2 + 1] = parent2[gene1:gene2 + 1]
+
+        # 2. Fill arrays
+        offpring_iterator = gene2 + 1
+        while np.count_nonzero(new_individual1 == -1) > 0:
+            if np.take(new_individual1, offpring_iterator, mode="wrap") == -1:
+                parent_iterator = offpring_iterator
+                while np.take(new_individual1, offpring_iterator, mode="wrap") == -1:
+                    if np.take(parent2, parent_iterator, mode="wrap") not in new_individual1:
+                        new_individual1[offpring_iterator % len(individual1)] = np.take(parent2, parent_iterator, mode="wrap")
+                        break
+                    parent_iterator += 1
+            if np.take(new_individual2, offpring_iterator, mode="wrap") == -1:
+                parent_iterator = offpring_iterator
+                while np.take(new_individual2, offpring_iterator, mode="wrap") == -1:
+                    if np.take(parent1, parent_iterator, mode="wrap") not in new_individual2:
+                        new_individual2[offpring_iterator % len(individual2)] = np.take(parent1, parent_iterator, mode="wrap")
+                        break
+                    parent_iterator += 1
+            offpring_iterator += 1
+
+        return (new_individual1, new_individual2)
+
 
     @staticmethod
     def choose_random_genes(individual):
@@ -296,6 +346,8 @@ class GeneticAlgorithm:
         # Select recombination
         if self.recombination_type == "pmx":
             recombination = self.recombination_pmx
+        elif self.recombination_type == "order":
+            recombination = self.recombination_order
         else:
             raise RecombinationTypeError
 
