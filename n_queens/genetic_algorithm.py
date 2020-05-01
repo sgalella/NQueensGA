@@ -202,6 +202,45 @@ class GeneticAlgorithm:
         return (new_individual1, new_individual2)
 
     @staticmethod
+    def recombination_cycle(individual1, individual2, gene1=None, gene2=None):
+        """
+        Creates a new individual by recombinating two parents using the
+        Cycle Crossover method.
+
+        Args:
+            parent1 (np.array): First parent.
+            parent2 (np.array): Second parent.
+
+        Returns:
+            new_individual1, new_individual2 (tuple): Recombined individuals.
+        """
+        # Copy parents
+        parent1 = individual1.copy()
+        parent2 = individual2.copy()
+
+        # Initialize offspring
+        new_individual1 = individual1.copy()
+        new_individual2 = individual2.copy()
+
+        # Perform the cycle recombination
+        # 1. Detect cycles
+        for position in range(len(individual1)):
+            cycle_positions = [position]
+            next_position = np.where(parent1 == parent2[position])[0][0]
+            while next_position != 0:
+                cycle_positions.append(next_position)
+                next_position = np.where(parent1 == parent2[next_position])[0][0]
+            if len(cycle_positions) < len(individual1):
+                break
+
+        # 3. Keep cycle and swap parents positions
+        swap_positions = np.array([position for position in range(len(individual1)) if position not in cycle_positions])
+        new_individual1[swap_positions] = parent2[swap_positions]
+        new_individual2[swap_positions] = parent1[swap_positions]
+
+        return (new_individual1, new_individual2)
+
+    @staticmethod
     def choose_random_genes(individual):
         gene1, gene2 = np.sort(np.random.choice(len(individual), size=(2, 1), replace=False).flatten())
         while gene2 - gene1 < 2:
@@ -349,6 +388,8 @@ class GeneticAlgorithm:
             recombination = self.recombination_pmx
         elif self.recombination_type == "order":
             recombination = self.recombination_order
+        elif self.recombination_type == "cycle":
+            recombination = self.recombination_cycle
         else:
             raise RecombinationTypeError
 
