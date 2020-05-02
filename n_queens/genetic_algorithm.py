@@ -153,14 +153,124 @@ class GeneticAlgorithm:
         return (new_individual1, new_individual2)
 
     @staticmethod
+    def recombination_edge(individual1, individual2, current_element=None):
+        """
+        Creates a new individual by recombinating two parents using the
+        Edge Crossover method.
+
+        Args:
+            individual1 (np.array): First parent.
+            individual1 (np.array): Second parent.
+
+        Returns:
+            new_individual1(np.array): Recombined individual.
+        """
+        # Copy parents
+        parent1 = individual1.copy()
+        parent2 = individual2.copy()
+
+        # Create adjacency dictionary
+        adjacency = GeneticAlgorithm.create_adjecency(parent1, parent2)
+
+        # Initialize new individual as an empty list
+        new_individual = []
+        if current_element is None:
+            current_element = np.random.choice(np.array(list(adjacency.keys())))
+        new_individual.append(current_element)
+
+        while len(new_individual) < len(parent1):
+            # Remove edges from current element
+            current_element_edges = adjacency[current_element]
+            adjacency = GeneticAlgorithm.delete_edges(adjacency, current_element)
+            adjacency.pop(current_element)
+
+            # Select next gene and append it to the offspring
+            current_element = GeneticAlgorithm.select_next_element(adjacency, current_element_edges)
+            new_individual.append(current_element)
+
+        return np.array(new_individual)
+
+    @staticmethod
+    def create_adjecency(individual1, individual2):
+        """
+        Creates adjacency dictionary by inspecting neighbors of different genes.
+        Genotype wraps up in the borders.
+
+        Args:
+            individual1 (np.array): First parent.
+            individual1 (np.array): Second parent.
+
+        Returns:
+            adjacency (dict): Description of edges in the genotype of ascendants.
+        """
+        adjacency = {}
+        # Parent 1
+        for idx, element in enumerate(individual1):
+            if idx == 0:
+                adjacency[element] = [individual1[-1], individual1[idx + 1]]
+            elif idx == len(individual1) - 1:
+                adjacency[element] = [individual1[idx - 1], individual1[0]]
+            else:
+                adjacency[element] = [individual1[idx - 1], individual1[idx + 1]]
+        # Parent2
+        for idx, element in enumerate(individual2):
+            if idx == 0:
+                adjacency[element].extend([individual2[-1], individual2[idx + 1]])
+            elif idx == len(individual2) - 1:
+                adjacency[element].extend([individual2[idx - 1], individual2[0]])
+            else:
+                adjacency[element].extend([individual2[idx - 1], individual2[idx + 1]])
+        return adjacency
+
+    @staticmethod
+    def delete_edges(adjacency, current_element):
+        """
+        Removes current_element from edges in adjacency.
+
+        Args:
+            adjacency (dict): Description of edges in the genotype of ascendants.
+            current_element_edges (list): Edges of the current element.
+
+        Returns:
+            adjacency (dict): Updated adjacency without edges of current element.
+        """
+        for key in adjacency.keys():
+            while current_element in adjacency[key]:
+                adjacency[key].remove(current_element)
+        return adjacency
+
+    @staticmethod
+    def select_next_element(adjacency, current_element_edges):
+        """
+        Selects the next edge by inspecting the edges of the current element.
+        Preference is as follows: repeated edge, shortes list, random.
+
+        Args:
+            adjacency (dict): Description of edges in the genotype of ascendants.
+            current_element_edges (list): Edges of the current element.
+
+        Returns:
+            next_current_element: Next gene to include in the offspring.
+        """
+        if not current_element_edges:
+            return np.random.choice(list(adjacency.keys()))
+        edge_length = []
+        for element in current_element_edges:
+            if current_element_edges.count(element) > 1:
+                return element
+            else:
+                edge_length.append(len(adjacency[element]))
+        return current_element_edges[np.argmax(edge_length)]
+
+    @staticmethod
     def recombination_order(individual1, individual2, gene1=None, gene2=None):
         """
         Creates a new individual by recombinating two parents using the
         Order Crossover method.
 
         Args:
-            parent1 (np.array): First parent.
-            parent2 (np.array): Second parent.
+            individual1 (np.array): First parent.
+            individual1 (np.array): Second parent.
 
         Returns:
             new_individual1, new_individual2 (tuple): Recombined individuals.
@@ -208,8 +318,8 @@ class GeneticAlgorithm:
         Cycle Crossover method.
 
         Args:
-            parent1 (np.array): First parent.
-            parent2 (np.array): Second parent.
+            individual1 (np.array): First parent.
+            individual1 (np.array): Second parent.
 
         Returns:
             new_individual1, new_individual2 (tuple): Recombined individuals.
@@ -242,6 +352,15 @@ class GeneticAlgorithm:
 
     @staticmethod
     def choose_random_genes(individual):
+        """
+        Selects two separate genes from individual.
+
+        Args:
+            individual (np.array): Genotype of individual.
+
+        Returns:
+            gene1, gene2 (tuple): Genes separated by at least another gene.
+        """
         gene1, gene2 = np.sort(np.random.choice(len(individual), size=(2, 1), replace=False).flatten())
         while gene2 - gene1 < 2:
             gene1, gene2 = np.sort(np.random.choice(len(individual), size=(2, 1), replace=False).flatten())
@@ -332,11 +451,17 @@ class GeneticAlgorithm:
         offspring = np.array([np.zeros([self.board_size], dtype=int) for _ in range(self.offspring_size)])
 
         # Recombinate best individuals
-        for individual in range(0, self.offspring_size, 2):
-            idx_parent1, idx_parent2 = np.random.choice(self.population_size, size=2, replace=False)
-            new_individual1, new_individual2 = recombination(population[idx_parent1], population[idx_parent2])
-            offspring[individual] = new_individual1
-            offspring[individual + 1] = new_individual2
+        if recombination.__name__ == "recombination_edge":
+            for individual in range(0, self.offspring_size):
+                idx_parent1, idx_parent2 = np.random.choice(self.population_size, size=2, replace=False)
+                new_individual1 = recombination(population[idx_parent1], population[idx_parent2])
+                offspring[individual] = new_individual1
+        else:
+            for individual in range(0, self.offspring_size, 2):
+                idx_parent1, idx_parent2 = np.random.choice(self.population_size, size=2, replace=False)
+                new_individual1, new_individual2 = recombination(population[idx_parent1], population[idx_parent2])
+                offspring[individual] = new_individual1
+                offspring[individual + 1] = new_individual2
 
         # Add mutation
         for idx in range(len(population)):
@@ -388,6 +513,8 @@ class GeneticAlgorithm:
         # Select recombination
         if self.recombination_type == "pmx":
             recombination = self.recombination_pmx
+        elif self.recombination_type == "edge":
+            recombination = self.recombination_edge
         elif self.recombination_type == "order":
             recombination = self.recombination_order
         elif self.recombination_type == "cycle":
@@ -398,14 +525,19 @@ class GeneticAlgorithm:
         # Iterate through generations
         for iteration in tqdm(range(self.num_iterations), ncols=75):
             population, fitness = self.generate_next_population(population, mutation, recombination)
+
+            # Save statistics iteration
             best_fitness_iteration = np.max(fitness)
             mean_fitness_iteration = np.mean(fitness)
             diversity_genotype_iteration = np.unique(population, axis=0).shape[0]
             diversity_phenotype_iteration = np.unique(fitness).shape[0]
+
             max_fitness.append(best_fitness_iteration)
             mean_fitness.append(mean_fitness_iteration)
             diversity_genotype.append(diversity_genotype_iteration)
             diversity_phenotype.append(diversity_phenotype_iteration)
+
+            # Keep best individuals
             if best_fitness_iteration > best_fitness_all:
                 solutions = []
                 for best_individual in population[np.where(fitness == best_fitness_iteration)]:

@@ -13,7 +13,7 @@ population_size = 100
 offspring_size = 20
 mutation_rate = 0.2
 mutation_type = "inversion"
-recombination_type = "cycle"
+recombination_type = "edge"
 
 # Initialize genetic algorithm
 ga = GeneticAlgorithm(board_size, num_iterations, population_size, offspring_size, mutation_rate, mutation_type, recombination_type)
