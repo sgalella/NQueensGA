@@ -254,13 +254,17 @@ class GeneticAlgorithm:
         """
         if not current_element_edges:
             return np.random.choice(list(adjacency.keys()))
-        edge_length = []
-        for element in current_element_edges:
+        edge_length = 4 * np.ones(len(current_element_edges))  # Max number of different neighbors
+        for idx, element in enumerate(current_element_edges):
             if current_element_edges.count(element) > 1:
                 return element
             else:
-                edge_length.append(len(adjacency[element]))
-        return current_element_edges[np.argmax(edge_length)]
+                edge_length[idx] = len(np.unique(adjacency[element]))
+        
+        # Break ties randomly
+        min_edge_length = np.random.choice(np.where(edge_length == edge_length.min())[0])
+
+        return current_element_edges[min_edge_length]
 
     @staticmethod
     def recombination_order(individual1, individual2, gene1=None, gene2=None):
