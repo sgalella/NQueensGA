@@ -4,19 +4,19 @@ from tqdm import tqdm
 
 class MutationTypeError(Exception):
     """
-    Selected mutation type does not exist.
+    Mutation type does not exist.
     """
-    def __init__(self):
-        super().__init__("Selected mutation type does not exist.")
+    def __init__(self, name):
+        super().__init__(f"'{name}' mutation type does not exist.")
 
 
 class RecombinationTypeError(Exception):
     """
-    Selected recombination type does not exist.
+    Recombination type does not exist.
     """
-    def __init__(self):
-        super().__init__("Selected recombination type does not exist.")
-
+    def __init__(self, name):
+        super().__init__(f"'{name}' recombination type does not exist.")
+        
 
 class GeneticAlgorithm:
     """
@@ -502,7 +502,7 @@ class GeneticAlgorithm:
         # Initialize best_fitness
         best_fitness_all = 0
 
-        # Select mutation
+        # Choose mutation
         if self.mutation_type == "swap":
             mutation = self.mutation_swap
         elif self.mutation_type == "insert":
@@ -512,9 +512,9 @@ class GeneticAlgorithm:
         elif self.mutation_type == "inversion":
             mutation = self.mutation_inversion
         else:
-            raise MutationTypeError
+            raise MutationTypeError(self.mutation_type)
 
-        # Select recombination
+        # Choose recombination
         if self.recombination_type == "pmx":
             recombination = self.recombination_pmx
         elif self.recombination_type == "edge":
@@ -524,7 +524,7 @@ class GeneticAlgorithm:
         elif self.recombination_type == "cycle":
             recombination = self.recombination_cycle
         else:
-            raise RecombinationTypeError
+            raise RecombinationTypeError(self.recombination_type)
 
         # Iterate through generations
         for iteration in tqdm(range(self.num_iterations), ncols=75):
