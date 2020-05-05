@@ -16,14 +16,22 @@ class RecombinationTypeError(Exception):
     """
     def __init__(self, name):
         super().__init__(f"'{name}' recombination type does not exist.")
-        
+
+
+class SelectionTypeError(Exception):
+    """
+    Selection type does not exist.
+    """
+    def __init__(self, name):
+        super().__init__(f"'{name}' selection type does not exist.")
+
 
 class GeneticAlgorithm:
     """
     Genetic algorithm for TSP.
     """
     def __init__(self, board_size=8, num_iterations=1000, population_size=100, offspring_size=20, mutation_rate=0.2,
-                 mutation_type="swap", recombination_type="pmx"):
+                 mutation_type="swap", recombination_type="pmx", selection_type="genitor"):
         """
         Initializes the algorithm.
         """
@@ -34,6 +42,7 @@ class GeneticAlgorithm:
         self.mutation_rate = mutation_rate
         self.mutation_type = mutation_type
         self.recombination_type = recombination_type
+        self.selection_type = selection_type
         assert self.offspring_size < self.population_size, "Population size has to be greater than the number of selected individuals"
 
     def __repr__(self):
@@ -441,7 +450,19 @@ class GeneticAlgorithm:
         mutated_individual = np.concatenate((individual[:gene1], chromosome[::-1], individual[gene2 + 1:]))
         return mutated_individual
 
-    def generate_next_population(self, population, mutation, recombination):
+    @staticmethod
+    def selection_genitor(fitness_population):
+        """
+        Selects population using the genitor method.
+
+        Args:
+            population (np.array): Population containg the different individuals.
+            fitness_population (np.array): Fitness of the population.
+        """
+        survivors = np.argsort(fitness_population)
+        return survivors[::-1]
+
+    def generate_next_population(self, population, mutation, recombination, selection):
         """
         Generates the population for the next iteration.
 
@@ -478,10 +499,10 @@ class GeneticAlgorithm:
         fitness_population = self.compute_fitness(temporal_population)
 
         # Select next generation with probability fitness / total_fitness
-        probability_survival = fitness_population / (sum(fitness_population))
-        idx_next_population = np.random.choice(range(len(temporal_population)), size=self.population_size, p=probability_survival.flatten())
+        survivors = selection(fitness_population)
+        survivors = survivors[:self.population_size]
 
-        return (temporal_population[idx_next_population], fitness_population[idx_next_population])
+        return (temporal_population[survivors], fitness_population[survivors])
 
     def run(self):
         """
@@ -526,9 +547,15 @@ class GeneticAlgorithm:
         else:
             raise RecombinationTypeError(self.recombination_type)
 
+        # Choose selection
+        if self.selection_type == "genitor":
+            selection = self.selection_genitor
+        else:
+            raise SelectionTypeError(self.selection_type)
+
         # Iterate through generations
         for iteration in tqdm(range(self.num_iterations), ncols=75):
-            population, fitness = self.generate_next_population(population, mutation, recombination)
+            population, fitness = self.generate_next_population(population, mutation, recombination, selection)
 
             # Save statistics iteration
             best_fitness_iteration = np.max(fitness)
