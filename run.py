@@ -1,5 +1,4 @@
-from n_queens.genetic_algorithm import GeneticAlgorithm
-from n_queens.utils import plot_results
+from genetic_nqueens import GeneticAlgorithm, plot_results
 from numpy.random import seed
 
 # Set random seed (for reproducibility)
