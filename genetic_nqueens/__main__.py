@@ -19,10 +19,10 @@ recombination_type = "edge"
 selection_type = "genitor"
 
 # Initialize genetic algorithm
-ga = GeneticAlgorithm(board_size, num_iterations, population_size, offspring_size, mutation_rate, mutation_type, recombination_type)
+ga = GeneticAlgorithm(board_size, population_size, offspring_size, mutation_rate, mutation_type, recombination_type)
 
 # Run algorithm
-solutions, max_fitness, mean_fitness, diversity_genotype, diversity_phenotype = ga.run()
+solutions, max_fitness, mean_fitness, diversity_genotype, diversity_phenotype = ga.run(num_iterations)
 
 # Plot the board
 plot_results(solutions[0], mean_fitness, max_fitness, diversity_genotype, diversity_phenotype)

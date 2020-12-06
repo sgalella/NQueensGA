@@ -30,13 +30,12 @@ class GeneticAlgorithm:
     """
     Genetic algorithm for TSP.
     """
-    def __init__(self, board_size=8, num_iterations=1000, population_size=100, offspring_size=20, mutation_rate=0.2,
+    def __init__(self, board_size=8, population_size=100, offspring_size=20, mutation_rate=0.2,
                  mutation_type="swap", recombination_type="pmx", selection_type="genitor"):
         """
         Initializes the algorithm.
         """
         self.board_size = board_size
-        self.num_iterations = num_iterations
         self.population_size = population_size
         self.offspring_size = offspring_size
         self.mutation_rate = mutation_rate
@@ -49,8 +48,7 @@ class GeneticAlgorithm:
         """
         Visualizes algorithm parameters when printing.
         """
-        return (f"Iterations: {self.num_iterations}\n"
-                f"Population size: {self.population_size}\n"
+        return (f"Population size: {self.population_size}\n"
                 f"Num selected: {self.num_selected}\n"
                 f"Mutation rate: {self.mutation_rate}\n")
 
@@ -504,7 +502,7 @@ class GeneticAlgorithm:
 
         return (temporal_population[survivors], fitness_population[survivors])
 
-    def run(self):
+    def run(self, num_iterations):
         """
         Runs the algorithm.
 
@@ -554,7 +552,7 @@ class GeneticAlgorithm:
             raise SelectionTypeError(self.selection_type)
 
         # Iterate through generations
-        for iteration in tqdm(range(self.num_iterations), ncols=75):
+        for iteration in tqdm(range(num_iterations), ncols=75):
             population, fitness = self.generate_next_population(population, mutation, recombination, selection)
 
             # Save statistics iteration
