@@ -32,5 +32,8 @@ pip install -r requirements.txt
 Then use the following command to run the genetic algorithm:
 
 ```bash
-python run.py
+python genetic_nqueens 
 ```
+
+The parameters of the algorithm can be changed in in `genetic_nqueens/__main__.py`.
+
