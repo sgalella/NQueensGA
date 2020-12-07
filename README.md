@@ -4,8 +4,9 @@ Genetic algorithm to solve the n queens problem. The problem arises from a gener
 > _"The eight queen puzzle is the problem of placing eight chess queens on an 8x8 board chessboard so that no two queens threaten each other."_ — From [Wikipedia](https://en.wikipedia.org/wiki/Eight_queens_puzzle)
 
 <p align="center">
-    <img width="300" height="300" src="images/board.jpg">
+    <img width="480" height="360" src="images/board.jpg">
 </p>
+
 
 
 ## Images
