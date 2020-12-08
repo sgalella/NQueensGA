@@ -2,7 +2,7 @@ from numpy.random import seed
 
 from genetic_nqueens import GeneticAlgorithm
 from genetic_nqueens import plot_results
-from genetic_nqueens import mutation
+from genetic_nqueens import mutation, recombination
 
 # Set random seed (for reproducibility)
 random_seed = 1234
@@ -15,7 +15,7 @@ population_size = 100
 offspring_size = 20
 mutation_rate = 0.05
 mutation_type = mutation.swap
-recombination_type = "edge"
+recombination_type = recombination.pmx
 selection_type = "genitor"
 
 # Initialize genetic algorithm
