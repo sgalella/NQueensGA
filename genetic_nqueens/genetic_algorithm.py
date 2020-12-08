@@ -1,13 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 
-
-class MutationTypeError(Exception):
-    """
-    Mutation type does not exist.
-    """
-    def __init__(self, name):
-        super().__init__(f"'{name}' mutation type does not exist.")
+from . import mutation
 
 
 class RecombinationTypeError(Exception):
@@ -31,7 +25,7 @@ class GeneticAlgorithm:
     Genetic algorithm for TSP.
     """
     def __init__(self, board_size=8, population_size=100, offspring_size=20, mutation_rate=0.2,
-                 mutation_type="swap", recombination_type="pmx", selection_type="genitor"):
+                 mutation_type=mutation.swap, recombination_type="pmx", selection_type="genitor"):
         """
         Initializes the algorithm.
         """
@@ -378,77 +372,6 @@ class GeneticAlgorithm:
         return (gene1, gene2)
 
     @staticmethod
-    def mutation_swap(individual, gene1=None, gene2=None):
-        """
-        Mutates indidividual using the swap method.
-
-        Args:
-            individual (np.array): Original individual.
-
-        Returns:
-            mutated_individual (np.array): Individual mutated.
-        """
-        if gene1 is None or gene2 is None:
-            gene1, gene2 = np.random.choice(len(individual), size=(2, 1), replace=False).flatten()
-        mutated_individual = individual.copy()
-        mutated_individual[gene1], mutated_individual[gene2] = mutated_individual[gene2], mutated_individual[gene1]
-        return mutated_individual
-
-    @staticmethod
-    def mutation_insert(individual, gene1=None, gene2=None):
-        """
-        Mutates indidividual using the insert method.
-
-        Args:
-            individual (np.array): Original individual.
-
-        Returns:
-            mutated_individual (np.array): Individual mutated.
-        """
-        if gene1 is None or gene2 is None:
-            gene1, gene2 = np.sort(np.random.choice(len(individual), size=(2, 1), replace=False).flatten())
-        mutated_individual = np.concatenate((individual[:gene1 + 1], np.array((individual[gene2],)),
-                                             individual[gene1 + 1:gene2], individual[gene2 + 1:]))
-        return mutated_individual
-
-    @staticmethod
-    def mutation_scramble(individual, gene1=None, gene2=None):
-        """
-        Mutates indidividual by using the scramble method.
-
-        Args:
-            individual (np.array): Original individual.
-
-        Returns:
-            mutated_individual (np.array): Individual mutated.
-        """
-        if gene1 is None or gene2 is None:
-            gene1, gene2 = np.sort(np.random.choice(len(individual), size=(2, 1), replace=False).flatten())
-        chromosome = individual[gene1:gene2 + 1]
-        chromosome_permuted = np.random.permutation(chromosome)
-        while np.array_equal(chromosome, chromosome_permuted):
-            chromosome_permuted = np.random.permutation(chromosome)
-        mutated_individual = np.concatenate((individual[:gene1], chromosome_permuted, individual[gene2 + 1:]))
-        return mutated_individual
-
-    @staticmethod
-    def mutation_inversion(individual, gene1=None, gene2=None):
-        """
-        Mutates indidividual by using the inversion method.
-
-        Args:
-            individual (np.array): Individual to be mutated.
-
-        Returns:
-            mutated_individual (np.array): Individual mutated.
-        """
-        if gene1 is None or gene2 is None:
-            gene1, gene2 = np.sort(np.random.choice(len(individual), size=(2, 1), replace=False).flatten())
-        chromosome = individual[gene1:gene2 + 1]
-        mutated_individual = np.concatenate((individual[:gene1], chromosome[::-1], individual[gene2 + 1:]))
-        return mutated_individual
-
-    @staticmethod
     def selection_genitor(fitness_population):
         """
         Selects population using the genitor method.
@@ -521,18 +444,6 @@ class GeneticAlgorithm:
         # Initialize best_fitness
         best_fitness_all = 0
 
-        # Choose mutation
-        if self.mutation_type == "swap":
-            mutation = self.mutation_swap
-        elif self.mutation_type == "insert":
-            mutation = self.mutation_insert
-        elif self.mutation_type == "scramble":
-            mutation = self.mutation_scramble
-        elif self.mutation_type == "inversion":
-            mutation = self.mutation_inversion
-        else:
-            raise MutationTypeError(self.mutation_type)
-
         # Choose recombination
         if self.recombination_type == "pmx":
             recombination = self.recombination_pmx
@@ -553,7 +464,7 @@ class GeneticAlgorithm:
 
         # Iterate through generations
         for iteration in tqdm(range(num_iterations), ncols=75):
-            population, fitness = self.generate_next_population(population, mutation, recombination, selection)
+            population, fitness = self.generate_next_population(population, self.mutation_type, recombination, selection)
 
             # Save statistics iteration
             best_fitness_iteration = np.max(fitness)
