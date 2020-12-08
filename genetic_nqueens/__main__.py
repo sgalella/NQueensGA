@@ -1,7 +1,7 @@
 from numpy.random import seed
 
-from genetic_algorithm import GeneticAlgorithm
-from utils import plot_results
+from genetic_nqueens import GeneticAlgorithm
+from genetic_nqueens import plot_results
 
 
 # Set random seed (for reproducibility)
