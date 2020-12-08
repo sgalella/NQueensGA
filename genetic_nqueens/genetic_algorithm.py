@@ -1,15 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 
-from . import mutation, recombination
-
-
-class SelectionTypeError(Exception):
-    """
-    Selection type does not exist.
-    """
-    def __init__(self, name):
-        super().__init__(f"'{name}' selection type does not exist.")
+from . import mutation, recombination, selection
 
 
 class GeneticAlgorithm:
@@ -17,7 +9,7 @@ class GeneticAlgorithm:
     Genetic algorithm for TSP.
     """
     def __init__(self, board_size=8, population_size=100, offspring_size=20, mutation_rate=0.2,
-                 mutation_type=mutation.swap, recombination_type=recombination.pmx, selection_type="genitor"):
+                 mutation_type=mutation.swap, recombination_type=recombination.pmx, selection_type=selection.genitor):
         """
         Initializes the algorithm.
         """
@@ -92,18 +84,6 @@ class GeneticAlgorithm:
 
         return fitness_population.flatten()
 
-    @staticmethod
-    def selection_genitor(fitness_population):
-        """
-        Selects population using the genitor method.
-
-        Args:
-            population (np.array): Population containg the different individuals.
-            fitness_population (np.array): Fitness of the population.
-        """
-        survivors = np.argsort(fitness_population)
-        return survivors[::-1]
-
     def generate_next_population(self, population, mutation, recombination, selection):
         """
         Generates the population for the next iteration.
@@ -140,7 +120,7 @@ class GeneticAlgorithm:
         temporal_population = np.vstack((population, offspring))
         fitness_population = self.compute_fitness(temporal_population)
 
-        # Select next generation with probability fitness / total_fitness
+        # Select next generation
         survivors = selection(fitness_population)
         survivors = survivors[:self.population_size]
 
@@ -165,15 +145,10 @@ class GeneticAlgorithm:
         # Initialize best_fitness
         best_fitness_all = 0
 
-        # Choose selection
-        if self.selection_type == "genitor":
-            selection = self.selection_genitor
-        else:
-            raise SelectionTypeError(self.selection_type)
-
         # Iterate through generations
         for iteration in tqdm(range(num_iterations), ncols=75):
-            population, fitness = self.generate_next_population(population, self.mutation_type, self.recombination_type, selection)
+            population, fitness = self.generate_next_population(population, self.mutation_type, self.recombination_type,
+                                                                self.selection_type) 
 
             # Save statistics iteration
             best_fitness_iteration = np.max(fitness)
