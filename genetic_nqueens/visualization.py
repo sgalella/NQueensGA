@@ -2,13 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 
 
-def plot_results(solution, mean_fitness, max_fitness, diversity_genotype, diversity_phenotype):
-    """
-    Prints the solution board and the algorithm convergence.
-
-    Args:
-        solution (np.array): Permutation of rows containing queens.
-    """
+def plot_board(solution):
     # Board window
     _, ax = plt.subplots()
     board_size = len(solution)
@@ -22,7 +16,8 @@ def plot_results(solution, mean_fitness, max_fitness, diversity_genotype, divers
     plt.savefig('images/board.jpg')
     plt.draw()
 
-    # Convergence figure
+
+def plot_fitness(mean_fitness, max_fitness):
     plt.figure()
     plt.plot(range(len(mean_fitness)), mean_fitness, 'b')
     plt.plot(range(len(max_fitness)), max_fitness, 'r--')
@@ -34,7 +29,8 @@ def plot_results(solution, mean_fitness, max_fitness, diversity_genotype, divers
     plt.savefig('images/convergence.jpg')
     plt.draw()
 
-    # Diversity bar plot
+
+def plot_diversity(diversity_genotype, diversity_phenotype):
     plt.figure()
     plt.bar(range(len(diversity_phenotype)), diversity_genotype, color='lime', alpha=0.5)
     plt.bar(range(len(diversity_phenotype)), diversity_phenotype, color='orange', alpha=0.5)
@@ -44,8 +40,4 @@ def plot_results(solution, mean_fitness, max_fitness, diversity_genotype, divers
     plt.title('Diversity through generations')
     plt.grid(alpha=0.3)
     plt.savefig('images/diversity.jpg')
-    plt.show()
-
-
-def find_checked_queens(solution):
-    pass
+    plt.draw()
