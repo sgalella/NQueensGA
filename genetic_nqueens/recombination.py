@@ -24,7 +24,7 @@ def pmx(individual1, individual2, gene1=None, gene2=None):
     # Perform the pmx recombination
     # 1. Select two genes at random and copy segment to new individuals
     if gene1 is None or gene2 is None:
-        gene1, gene2 = choose_random_genes(individual1)
+        gene1, gene2 = _choose_random_genes(individual1)
     new_individual1[gene1:gene2 + 1] = parent1[gene1:gene2 + 1]
     new_individual2[gene1:gene2 + 1] = parent2[gene1:gene2 + 1]
 
@@ -71,7 +71,7 @@ def edge(individual1, individual2, current_element=None):
     parent2 = individual2.copy()
 
     # Create adjacency dictionary
-    adjacency = create_adjecency(parent1, parent2)
+    adjacency = _create_adjecency(parent1, parent2)
 
     # Initialize new individual as an empty list
     new_individual = []
@@ -82,11 +82,11 @@ def edge(individual1, individual2, current_element=None):
     while len(new_individual) < len(parent1):
         # Remove edges from current element
         current_element_edges = adjacency[current_element]
-        adjacency = delete_edges(adjacency, current_element)
+        adjacency = _delete_edges(adjacency, current_element)
         adjacency.pop(current_element)
 
         # Select next gene and append it to the offspring
-        current_element = select_next_element(adjacency, current_element_edges)
+        current_element = _select_next_element(adjacency, current_element_edges)
         new_individual.append(current_element)
 
     return np.array(new_individual)
@@ -115,7 +115,7 @@ def order(individual1, individual2, gene1=None, gene2=None):
     # Perform the order recombination
     # 1. Select two genes at random and copy segment to new individuals
     if gene1 is None or gene2 is None:
-        gene1, gene2 = choose_random_genes(individual1)
+        gene1, gene2 = _choose_random_genes(individual1)
     new_individual1[gene1:gene2 + 1] = parent1[gene1:gene2 + 1]
     new_individual2[gene1:gene2 + 1] = parent2[gene1:gene2 + 1]
 
@@ -180,7 +180,7 @@ def cycle(individual1, individual2, gene1=None, gene2=None):
     return (new_individual1, new_individual2)
 
 
-def create_adjecency(individual1, individual2):
+def _create_adjecency(individual1, individual2):
     """
     Creates adjacency dictionary by inspecting neighbors of different genes.
     Genotype wraps up in the borders.
@@ -212,7 +212,7 @@ def create_adjecency(individual1, individual2):
     return adjacency
 
 
-def delete_edges(adjacency, current_element):
+def _delete_edges(adjacency, current_element):
     """
     Removes current_element from edges in adjacency.
 
@@ -229,7 +229,7 @@ def delete_edges(adjacency, current_element):
     return adjacency
 
 
-def select_next_element(adjacency, current_element_edges):
+def _select_next_element(adjacency, current_element_edges):
     """
     Selects the next edge by inspecting the edges of the current element.
     Preference is as follows: repeated edge, shortes list, random.
@@ -256,7 +256,7 @@ def select_next_element(adjacency, current_element_edges):
     return current_element_edges[min_edge_length]
 
 
-def choose_random_genes(individual):
+def _choose_random_genes(individual):
     """
     Selects two separate genes from individual.
 
