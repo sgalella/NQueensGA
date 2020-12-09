@@ -98,7 +98,7 @@ class GeneticAlgorithm:
         offspring = np.array([np.zeros([self.board_size], dtype=int) for _ in range(self.offspring_size)])
 
         # Recombinate best individuals
-        if recombination.__name__ == "recombination_edge":
+        if recombination.__name__ == "edge":
             for individual in range(0, self.offspring_size):
                 idx_parent1, idx_parent2 = np.random.choice(self.population_size, size=2, replace=False)
                 new_individual1 = recombination(population[idx_parent1], population[idx_parent2])
@@ -148,7 +148,7 @@ class GeneticAlgorithm:
         # Iterate through generations
         for iteration in tqdm(range(num_iterations), ncols=75):
             population, fitness = self.generate_next_population(population, self.mutation_type, self.recombination_type,
-                                                                self.selection_type) 
+                                                                self.selection_type)
 
             # Save statistics iteration
             best_fitness_iteration = np.max(fitness)
