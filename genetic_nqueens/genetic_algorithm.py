@@ -27,7 +27,7 @@ class GeneticAlgorithm:
         Visualizes algorithm parameters when printing.
         """
         return (f"Population size: {self.population_size}\n"
-                f"Num selected: {self.num_selected}\n"
+                f"Num selected: {self.population_size - self.offspring_size}\n"
                 f"Mutation rate: {self.mutation_rate}\n")
 
     def random_initial_population(self):
@@ -81,7 +81,6 @@ class GeneticAlgorithm:
         fitness_population = np.zeros([len(population), 1])
         for idx, individual in enumerate(population):
             fitness_population[idx] = 1 / (self.check_queens(individual) + 1)
-
         return fitness_population.flatten()
 
     def generate_next_population(self, population, mutation, recombination, selection):
