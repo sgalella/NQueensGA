@@ -89,7 +89,7 @@ def edge(individual1, individual2, current_element=None):
         current_element = _select_next_element(adjacency, current_element_edges)
         new_individual.append(current_element)
 
-    return np.array(new_individual)
+    return (np.array(new_individual), None)
 
 
 def order(individual1, individual2, gene1=None, gene2=None):

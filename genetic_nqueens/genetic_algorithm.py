@@ -97,17 +97,17 @@ class GeneticAlgorithm:
         offspring = np.array([np.zeros([self.board_size], dtype=int) for _ in range(self.offspring_size)])
 
         # Recombinate best individuals
-        if recombination.__name__ == "edge":
-            for individual in range(0, self.offspring_size):
-                idx_parent1, idx_parent2 = np.random.choice(self.population_size, size=2, replace=False)
-                new_individual1 = recombination(population[idx_parent1], population[idx_parent2])
+        individual = 0
+        while individual < self.offspring_size:
+            idx_parent1, idx_parent2 = np.random.choice(self.population_size, size=2, replace=False)
+            new_individual1, new_individual2 = recombination(population[idx_parent1], population[idx_parent2])
+            if new_individual2 is None:  # Edge recombination
                 offspring[individual] = new_individual1
-        else:
-            for individual in range(0, self.offspring_size, 2):
-                idx_parent1, idx_parent2 = np.random.choice(self.population_size, size=2, replace=False)
-                new_individual1, new_individual2 = recombination(population[idx_parent1], population[idx_parent2])
+                individual += 1
+            else:  # PMX, cycle and order recombination
                 offspring[individual] = new_individual1
                 offspring[individual + 1] = new_individual2
+                individual += 2
 
         # Add mutation
         for idx in range(len(population)):
