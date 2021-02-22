@@ -1,5 +1,5 @@
 # Genetic N-Queens
-Genetic algorithm to solve the n queens problem. The problem arises from a generalization of the eight puzzle:
+[Genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm) to solve the n queens problem. The problem arises from a generalization of the eight puzzle:
 
 > _"The eight queen puzzle is the problem of placing eight chess queens on an 8x8 board chessboard so that no two queens threaten each other."_ — From [Wikipedia](https://en.wikipedia.org/wiki/Eight_queens_puzzle)
 
